@@ -1,1 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kabab Paradise Catch Game</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <!-- Neon font for branding -->
+  <link href="https://fonts.googleapis.com/css2?family=Monoton&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      background: #f7ffe0;
+      font-family: 'Baloo 2', Arial, Helvetica, sans-serif;
+      touch-action: none;
+      user-select: none;
+      overflow: hidden;
+    }
+    #brand {
+      width: 100vw;
+      text-align: center;
+      font-family: 'Monoton', cursive, Arial, Helvetica, sans-serif;
+      font-size: 2.3em;
+      font-weight: normal;
+      letter-spacing: 3px;
+      color: #fff;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      user-select: none;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #ff4da6,
+        0 0 30px #ff4da6,
+        0 0 40px #ff4da6,
+        0 0 55px #ff4da6,
+        0 0 75px #ff4da6;
+      animation: neon-flicker 1.3s infinite alternate;
+    }
+    @keyframes neon-flicker {
+      from {
+        text-shadow:
+          0 0 5px #fff,
+          0 0 10px #fff,
+          0 0 20px #ff4da6,
+          0 0 30px #ff4da6,
+          0 0 40px #ff4da6,
+          0 0 55px #ff4da6,
+          0 0 75px #ff4da6;
+      }
+      to {
+        text-shadow:
+          0 0 10px #fff,
+          0 0 20px #fff,
+          0 0 30px #ff4da6,
+          0 0 40px #ff4da6,
+          0 0 60px #ff4da6,
+          0 0 80px #ff4da6,
+          0 0 100px #ff4da6;
+      }
+    }
+    @media (max-width: 600px) {
+      #brand { font-size: 1.3em; }
+    }
+    #gameCanvas {
+      background: linear-gradient(to bottom, #fffbe0 0%, #ffe0e0 100%);
+      display: block;
+      margin: 0 auto;
+      border: 4px solid #eab676;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px #eab67677;
+      touch-action: none;
+    }
+    #overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255,255,255,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      font-size: 2rem;
+      color: #c62828;
+      text-align: center;
+      transition: background 0.5s;
+    }
+    #overlay.end {
+      background: linear-gradient(135deg, #fffbe0 60%, #ffe0e0 100%) !important;
+    }
+    #overlay h1, #overlay h2 {
+      color: #ff9800;
+      font-size: 2.4em;
+      margin-bottom: 0.2em;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 #fff176, 0 2px 8px #ffd18077;
+    }
+    #overlay p, #overlay a {
+      color: #c62828;
+      font-size: 1.2em;
+      margin: 0.5em 0;
+      text-shadow: 1px 1px 0 #fffde7;
+    }
+    #overlay a {
+      display: inline-block;
+      margin-top: 1em;
+      padding: 10px 30px;
+      background: #ffb74d;
+      color: #fff;
+      border-radius: 12px;
+      font-size: 1.1em;
+      font-weight: bold;
+      text-decoration: none;
+      box-shadow: 0 2px 8px #ffd18077;
+      border: 2px solid #c62828;
+      transition: background 0.2s, color 0.2s;
+    }
+    #overlay a:hover {
+      background: #c62828;
+      color: #fffde7;
+    }
+    #startBtn, #restartBtn {
+      margin-top: 32px;
+      padding: 14px 36px;
+      border: none;
+      background: #ffeb3b;
+      color: #c62828;
+      font-size: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px #ffd18077;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    #startBtn:hover, #restartBtn:hover {
+      background: #ffd54f;
+    }
+    @media (max-width: 800px) {
+      #gameCanvas { width: 99vw !important; height: 85vw !important; }
+      #overlay { font-size: 1.2rem; }
+    }
+    @media (max-width: 600px) {
+      #gameCanvas { width: 99vw !important; height: 120vw !important; }
+      #overlay { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="brand">Kabab Paradise</div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="overlay" style="display:flex;">
+    <h1>🍢 Kabab Paradise Catch 🍚</h1>
+    <p>
+      Move your basket to catch <b style="color:#ff5722;">three of the same</b> food.<br>
+      <span style="color:#c62828;">If you catch a different one as the third, you lose your basket!</span><br>
+      <br>
+      <b style="color:#ad1457;" id="goalMsg"></b><br>
+      <br>
+      <span style="color:#1976d2;">Touch and drag</span> the basket to move.<br>
+      <br>
+      <span style="font-size:1.3em; color:#ff9800;">Ready to play?</span>
+    </p>
+    <button id="startBtn">Start Game</button>
+  </div>
+  <script>
+    // --- GAME CONSTANTS ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      let ww = window.innerWidth, wh = window.innerHeight;
+      let cW = Math.min(ww * 0.99, 540);
+      let cH = Math.min(wh - 10, cW * 1.6, 950);
+      canvas.width = cW;
+      canvas.height = cH;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // --- KABAB PARADISE FOOD EMOJIS ---
+    const ALL_ITEMS = [
+      {name: "Kebab", emoji: "🥙"},
+      {name: "Rice", emoji: "🍚"},
+      {name: "Naan", emoji: "🫓"},
+      {name: "Burger", emoji: "🍔"},
+      {name: "Fries", emoji: "🍟"},
+      {name: "Falafel", emoji: "🧆"},
+      {name: "Baklava", emoji: "🧁"},
+      {name: "Cake", emoji: "🍰"},
+      {name: "Chicken", emoji: "🍗"},
+      {name: "Lamb", emoji: "🍖"},
+      {name: "Fish", emoji: "🐟"},
+      {name: "Salad", emoji: "🥗"},
+      {name: "Eggplant", emoji: "🍆"},
+      {name: "Sandwich", emoji: "🥪"},
+      {name: "Taco", emoji: "🌮"},
+      {name: "Pizza", emoji: "🍕"},
+      {name: "Soup", emoji: "🍲"},
+      {name: "Cheese", emoji: "🧀"},
+      {name: "Broccoli", emoji: "🥦"},
+      {name: "Carrot", emoji: "🥕"}
+    ];
+    const GOLDEN_SPECIAL = {name: "Golden Platter", emoji: "✨🍽️✨", golden: true};
+    const LEVEL_FRUIT_COUNTS = [6, 10, 14, ALL_ITEMS.length];
+    const LEVELS = [
+      {goal: 400, speed: 2, dropRate: 60},
+      {goal: 800, speed: 2.5, dropRate: 50},
+      {goal: 1200, speed: 3, dropRate: 40},
+      {goal: 2000, speed: 3.5, dropRate: 30}
+    ];
+    const LEVEL_TIME = 40;
+
+    // --- GAME STATE ---
+    let gameState = 'start';
+    let level = 0;
+    let score = 0;
+    let timer = LEVEL_TIME;
+    let basket = [];
+    let falling = [];
+    let dropTick = 0;
+    let basketX = 0, basketWidth = 0, basketHeight = 0;
+    let basketTargetX = 0;
+    let touchOffset = 0;
+    let redXTimer = 0;
+    let confetti = [];
+    let message = "";
+
+    // --- UI ELEMENTS ---
+    const overlay = document.getElementById('overlay');
+    const startBtn = document.getElementById('startBtn');
+    let restartBtn = null;
+
+    // --- SMART FOOD DROP LOGIC ---
+    function getCurrentItems() {
+      let count = LEVEL_FRUIT_COUNTS[Math.min(level, LEVEL_FRUIT_COUNTS.length-1)];
+      return ALL_ITEMS.slice(0, count);
+    }
+    function getNextFood() {
+      const ITEMS = getCurrentItems();
+      if (basket.length === 2 && basket[0] === basket[1]) {
+        if (Math.random() < 0.8) {
+          return ITEMS.find(item => item.name === basket[0]);
+        }
+      }
+      if (Math.random() < 0.06) return GOLDEN_SPECIAL;
+      return ITEMS[Math.floor(Math.random() * ITEMS.length)];
+    }
+
+    // --- GAME LOOP ---
+    function resetGame() {
+      level = 0; score = 0; timer = LEVEL_TIME;
+      basket = []; falling = []; dropTick = 0;
+      basketX = canvas.width/2;
+      basketTargetX = basketX;
+      basketWidth = Math.max(canvas.width * 0.25, 90);
+      basketHeight = Math.max(canvas.height * 0.06, 44);
+      redXTimer = 0; confetti = [];
+      message = "";
+    }
+
+    function startGame() {
+      gameState = 'playing';
+      resetGame();
+      overlay.style.display = 'none';
+      overlay.classList.remove('end');
+      requestAnimationFrame(gameLoop);
+    }
+
+    function nextLevel() {
+      level++;
+      if (level >= LEVELS.length) {
+        endGame(true);
+      } else {
+        timer = LEVEL_TIME;
+        basket = [];
+        falling = [];
+        dropTick = 0;
+        message = "";
+        gameState = 'between';
+        setTimeout(() => {
+          gameState = 'playing';
+          requestAnimationFrame(gameLoop);
+        }, 2500);
+        showPromo();
+      }
+    }
+
+    function endGame(won=false) {
+      gameState = 'over';
+      overlay.classList.add('end');
+      overlay.innerHTML = `
+        <h1>${won ? "🎉 You Win! 🎉" : "Game Over"}</h1>
+        <p>Your Score: <b style="color:#ad1457;">${score}</b></p>
+        <p>${won ? "You are a Kabab Paradise Champion!" : "Try again to beat your high score!"}</p>
+        <p style="font-size:1.3em; color:#c62828;">Don’t forget to check out Kabab Paradise for the best halal food!<br>🥙🍚🍗🍟</p>
+        <a href="https://www.kababparadise.com/" target="_blank">Visit Kabab Paradise!</a>
+        <button id="restartBtn">Play Again</button>
+      `;
+      overlay.style.display = 'flex';
+      restartBtn = document.getElementById('restartBtn');
+      restartBtn.onclick = () => {
+        overlay.style.display = 'none';
+        overlay.classList.remove('end');
+        startGame();
+      };
+    }
+
+    function showPromo() {
+      overlay.classList.remove('end');
+      overlay.innerHTML = `
+        <h2>Level ${level+1} Complete!</h2>
+        <p>Your Score: <b style="color:#ad1457;">${score}</b></p>
+        <div style="font-size:1.2em;">
+          Don’t forget to check out Kabab Paradise for the best halal food!<br>
+          <span style="color:#ff9800;">🥙🍚🍗🍟</span><br>
+          <b style="color:#ff5722;">Today’s Deal:</b> <span style="color:#1976d2;">Platter Hours 11am-3pm!</span>
+        </div>
+      `;
+      overlay.style.display = 'flex';
+      setTimeout(() => { overlay.style.display = 'none'; }, 2000);
+    }
+
+    function gameLoop() {
+      if (gameState !== 'playing') return;
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+      if (timer > 0) {
+        timer -= 1/60;
+        if (timer <= 0) {
+          timer = 0;
+          if (score >= LEVELS[level].goal) {
+            nextLevel();
+          } else {
+            endGame();
+          }
+        }
+      }
+      basketX += (basketTargetX - basketX)*0.25;
+      if (basketX < basketWidth/2) basketX = basketWidth/2;
+      if (basketX > canvas.width-basketWidth/2) basketX = canvas.width-basketWidth/2;
+      dropTick++;
+      if (dropTick >= LEVELS[level].dropRate) {
+        dropTick = 0;
+        let item = getNextFood();
+        let x = Math.random()*(canvas.width-44)+22;
+        falling.push({item, x, y: -30, speed: LEVELS[level].speed + Math.random()*1.2});
+      }
+      for (let i=falling.length-1; i>=0; i--) {
+        let f = falling[i];
+        f.y += f.speed;
+        if (f.y > canvas.height-basketHeight*2 && Math.abs(f.x-basketX) < basketWidth/2+16) {
+          if (f.item.golden) {
+            score += 200;
+            confettiBurst();
+            message = "✨ Golden Platter! +200 ✨";
+          } else {
+            basket.push(f.item.name);
+            if (basket.length === 3) {
+              if (basket.every(n => n === basket[0])) {
+                score += 100;
+                confettiBurst();
+                message = "Nice! +100";
+                basket = [];
+              } else {
+                redXTimer = 30;
+                message = "Oops! Basket emptied!";
+                basket = [];
+              }
+            }
+          }
+          falling.splice(i,1);
+        } else if (f.y > canvas.height+40) {
+          falling.splice(i,1);
+        }
+      }
+      if (redXTimer > 0) redXTimer--;
+      for (let i=confetti.length-1; i>=0; i--) {
+        let c = confetti[i];
+        c.y += c.vy; c.x += c.vx; c.vy += 0.1;
+        c.life--;
+        if (c.life <= 0) confetti.splice(i,1);
+      }
+    }
+
+    function confettiBurst() {
+      for (let i=0;i<18;i++) {
+        confetti.push({
+          x: basketX,
+          y: canvas.height-basketHeight*1.7,
+          vx: Math.cos(i/3)*Math.random()*3,
+          vy: -Math.abs(Math.sin(i/3)*Math.random()*3)-2,
+          color: `hsl(${Math.random()*360},90%,60%)`,
+          life: 24+Math.random()*12
+        });
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+      ctx.font = `bold ${Math.round(canvas.height*0.045)}px 'Baloo 2', Arial, sans-serif`;
+      ctx.textAlign = "left";
+      ctx.fillStyle = "#ff9800";
+      ctx.fillText(`Score:`, 18, 1+canvas.height*0.055);
+      ctx.fillStyle = "#ad1457";
+      ctx.fillText(`${score}`, 110, 1+canvas.height*0.055);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#c62828";
+      ctx.fillText(`Level ${level+1}`, canvas.width/2, 1+canvas.height*0.055);
+
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#388e3c";
+      ctx.fillText(`Time: ${Math.ceil(timer)}`, canvas.width-18, 1+canvas.height*0.055);
+
+      for (let f of falling) {
+        ctx.font = f.item.golden
+          ? `bold ${Math.round(canvas.height*0.06)}px 'Baloo 2', Arial, sans-serif`
+          : `${Math.round(canvas.height*0.05)}px 'Baloo 2', Arial, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.globalAlpha = 1;
+        ctx.fillText(f.item.emoji, f.x, f.y);
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.save();
+      ctx.translate(basketX, canvas.height-basketHeight*1.2);
+      ctx.fillStyle = "#ffe082";
+      ctx.beginPath();
+      ctx.ellipse(0,0,basketWidth/2,basketHeight/2,0,0,Math.PI*2);
+      ctx.fill();
+      ctx.strokeStyle = "#eab676";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0,6,Math.max(22, basketWidth/4),Math.PI*0.15,Math.PI*0.85,false);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#c62828";
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(-basketWidth/2+12,-8,10,Math.PI*0.5,Math.PI*1.5,false);
+      ctx.arc(basketWidth/2-12,-8,10,Math.PI*1.5,Math.PI*0.5,false);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#eab676";
+      ctx.stroke();
+      for (let i=0;i<basket.length;i++) {
+        let idx = ALL_ITEMS.findIndex(it=>it.name===basket[i]);
+        let emoji = idx>=0 ? ALL_ITEMS[idx].emoji : "❓";
+        ctx.font = `${Math.round(canvas.height*0.045)}px 'Baloo 2', Arial, sans-serif`;
+        ctx.fillText(emoji, -24+24*i, -10);
+      }
+      ctx.restore();
+
+      if (redXTimer>0) {
+        ctx.save();
+        ctx.globalAlpha = redXTimer/30;
+        ctx.strokeStyle = "#c62828";
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.moveTo(canvas.width/2-40,canvas.height/2-40);
+        ctx.lineTo(canvas.width/2+40,canvas.height/2+40);
+        ctx.moveTo(canvas.width/2+40,canvas.height/2-40);
+        ctx.lineTo(canvas.width/2-40,canvas.height/2+40);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (let c of confetti) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0,c.life/36);
+        ctx.fillStyle = c.color;
+        ctx.beginPath();
+        ctx.arc(c.x,c.y,4,0,Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (message) {
+        ctx.font = `bold ${Math.round(canvas.height*0.045)}px 'Baloo 2', Arial, sans-serif`;
+        ctx.fillStyle = "#ff9800";
+        ctx.textAlign = "center";
+        ctx.fillText(message, canvas.width/2, canvas.height*0.2);
+        if (Math.random()<0.02) message = "";
+      }
+    }
+
+    let dragging = false;
+    function getTouchX(e) {
+      let rect = canvas.getBoundingClientRect();
+      let x = e.touches ? e.touches[0].clientX : e.clientX;
+      let scale = canvas.width / rect.width;
+      return (x - rect.left) * scale;
+    }
+    canvas.addEventListener('touchstart', function(e){
+      let x = getTouchX(e);
+      if (Math.abs(x-basketX) < basketWidth) {
+        dragging = true;
+        touchOffset = x-basketX;
+      }
+    });
+    canvas.addEventListener('touchmove', function(e){
+      if (dragging) {
+        let x = getTouchX(e);
+        basketTargetX = x-touchOffset;
+      }
+      e.preventDefault();
+    }, {passive:false});
+    canvas.addEventListener('touchend', function(e){
+      dragging = false;
+    });
+
+    canvas.addEventListener('mousedown', function(e){
+      let x = getTouchX(e);
+      if (Math.abs(x-basketX) < basketWidth) {
+        dragging = true;
+        touchOffset = x-basketX;
+      }
+    });
+    canvas.addEventListener('mousemove', function(e){
+      if (dragging) {
+        let x = getTouchX(e);
+        basketTargetX = x-touchOffset;
+      }
+    });
+    canvas.addEventListener('mouseup', function(e){
+      dragging = false;
+    });
+
+    startBtn.onclick = startGame;
+
+    document.body.addEventListener('touchmove', function(e){
+      if (gameState === 'playing') e.preventDefault();
+    }, {passive:false});
+
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      resetGame();
+      draw();
+      document.getElementById('goalMsg').innerHTML = 
+        `Score <span style="color:#ff5722;">${LEVELS[0].goal}</span> points to level up!`;
+    });
+
+    window.addEventListener('resize', () => {
+      resetGame();
+      draw();
+      if (gameState === 'start') {
+        document.getElementById('goalMsg').innerHTML = 
+          `Score <span style="color:#ff5722;">${LEVELS[0].goal}</span> points to level up!`;
+      }
+    });
+
+    draw();
+  </script>
+</body>
+</html>
 
